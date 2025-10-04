@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cosmic Glitch Poetry — Broken Worlds</title>
+  <meta name="description" content="A starter single-page poetic website with a cosmic glitch vibe, animations, audio player, and reading modes." />
+  <meta property="og:title" content="Cosmic Glitch Poetry — Starter" />
+  <meta property="og:description" content="Animated, accessible, single-page poetry reader with a vibrant, broken aesthetic." />
+  <meta name="theme-color" content="#00001a" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.9.6/lottie.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+  <style>
+    /* =====================
+       Cosmic Glitch Poetry — Styles
+       - Palette: Deep space, neon accents
+       - Vibe: Glitch, broken, vibrant
+       - Responsive layout
+       ===================== */
+
+    :root{
+      --bg: #00001a; /* Deep space blue */
+      --card: rgba(100, 115, 255, 0.1);
+      --glass: rgba(100, 115, 255, 0.08);
+      --muted: #a9a9d4;
+      --accent: #ff33cc; /* Neon magenta */
+      --warm: #00e5ff;   /* Neon cyan */
+      --paper: #f0f0ff;
+      --maxwidth: 1100px;
+      --mono: 'Noto Sans Devanagari', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    }
+
+    /* Basic Reset */
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:var(--mono);
+      background: var(--bg);
+      color:var(--paper);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-y:scroll;
+      line-height:1.6;
+    }
+
+    /* Animated background canvas */
+    #spaceCanvas{
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      width: 100%;
+      height: 100%;
+      pointer-events:none;
+    }
+
+    /* container */
+    .wrap{max-width:var(--maxwidth);margin:0 auto;padding:32px; position: relative; z-index: 1;}
+
+    /* Hero */
+    header.hero{
+      display:flex;align-items:center;justify-content:space-between;gap:20px;padding:40px 0 80px;
+    }
+    .hero-left{flex:1;min-width:260px}
+
+    /* Glitchy Title Style */
+    .title {
+      font-family:var(--serif);
+      font-size:clamp(32px, 5.2vw, 58px);
+      margin:0 0 8px 0;
+      letter-spacing:0.2px;
+      color:var(--paper);
+      line-height:1.02;
+      position: relative;
+      text-shadow: 0 0 5px var(--paper), 0 0 10px var(--accent), 0 0 20px var(--warm);
+      animation: glitch-shake 5s infinite linear alternate-reverse;
+    }
+    .title::before, .title::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .title::before {
+      left: 3px;
+      text-shadow: -2px 0 var(--accent);
+      animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+    }
+    .title::after {
+      left: -3px;
+      text-shadow: -2px 0 var(--warm), 2px 2px var(--accent);
+      animation: glitch-anim-2 3s infinite linear alternate-reverse;
+    }
+    @keyframes glitch-anim-1 {
+      0% { clip-path: polygon(0 2%, 100% 2%, 100% 98%, 0 98%); }
+      25% { clip-path: polygon(0 75%, 100% 75%, 100% 100%, 0 100%); }
+      50% { clip-path: polygon(0 25%, 100% 25%, 100% 35%, 0 35%); }
+      100% { clip-path: polygon(0 60%, 100% 60%, 100% 70%, 0 70%); }
+    }
+    @keyframes glitch-anim-2 {
+      0% { clip-path: polygon(0 15%, 100% 15%, 100% 20%, 0 20%); }
+      33% { clip-path: polygon(0 5%, 100% 5%, 100% 12%, 0 12%); }
+      66% { clip-path: polygon(0 80%, 100% 80%, 100% 85%, 0 85%); }
+      100% { clip-path: polygon(0 40%, 100% 40%, 100% 55%, 0 55%); }
+    }
+    @keyframes glitch-shake {
+      0% { transform: translate(0, 0) skew(0deg); }
+      100% { transform: translate(-1px, 1px) skew(-1deg); }
+    }
+
+
+    .tagline{color:var(--muted);font-size:15px;margin-bottom:18px}
+
+    /* hero CTA */
+    .cta-row{display:flex;gap:10px;align-items:center}
+    .btn{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));border:1px solid rgba(0, 229, 255, 0.2);padding:10px 14px;border-radius:12px;color:var(--paper);cursor:pointer; transition: all 0.3s ease;}
+    .btn:hover { background: var(--card); border-color: var(--warm); text-shadow: 0 0 8px var(--warm); box-shadow: 0 0 15px var(--warm);}
+    .btn.secondary{background:transparent;border:1px solid rgba(255, 51, 204, 0.2);}
+    .btn.secondary:hover { border-color: var(--accent); text-shadow: 0 0 8px var(--accent); box-shadow: 0 0 15px var(--accent);}
+
+    /* hero visual box */
+    .hero-right{width:420px;max-width:40%;min-width:260px}
+    .hero-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:18px;padding:18px;border:1px solid rgba(0, 229, 255, 0.1);backdrop-filter: blur(8px);}
+    .hero-card .preview{height:260px;border-radius:12px;background-image:linear-gradient(160deg, rgba(255, 51, 204, 0.1), rgba(0, 229, 255, 0.05));display:flex;align-items:center;justify-content:center;color:var(--muted)}
+
+    /* grid of poems with broken style */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:28px}
+    .card{
+      background:var(--card);
+      padding:14px;
+      border-radius:12px;
+      border:1px solid rgba(0, 229, 255, 0.2);
+      position:relative;
+      overflow:hidden;
+      box-shadow: 0 0 15px rgba(255, 51, 204, 0.1);
+      clip-path: polygon(0% 5%, 95% 0%, 100% 95%, 5% 100%);
+      transition: transform 0.4s ease, clip-path 0.4s ease, box-shadow 0.4s ease;
+    }
+    .card:hover {
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+    .card h4{margin:0 0 6px;font-family:var(--serif);font-size:18px}
+    .card p{margin:0;color:var(--muted);font-size:13px}
+    .tags{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--muted)}
+
+    /* reader modal */
+    .reader{position:fixed;inset:0;background:linear-gradient(180deg, rgba(0,0,26,0.94), rgba(0,0,20,0.96));display:none;align-items:center;justify-content:center;padding:32px;z-index:1000}
+    .reader.open{display:flex}
+    .reader-inner{width:min(880px,96%);background:linear-gradient(180deg, rgba(100, 115, 255, 0.05), rgba(0, 229, 255, 0.02));border-radius:12px;padding:28px;border:1px solid rgba(0, 229, 255, 0.2);backdrop-filter: blur(10px);max-height:86vh;overflow:auto}
+    .reader .controls{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+
+    /* poem body */
+    .poem-body{font-size:20px;color:var(--paper);line-height:1.8;padding:8px 6px;font-family:var(--mono)}
+    .poem-body .line{display:block;padding:4px 0}
+    .poem-body .highlight{background:linear-gradient(90deg, rgba(255, 51, 204, 0.14), rgba(0, 229, 255, 0.08));border-radius:6px;padding:0 6px}
+
+    /* settings panel */
+    .settings{position:fixed;right:18px;bottom:18px;background:var(--glass);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+
+    /* audio player */
+    .player{display:flex;align-items:center;gap:10px}
+    .progress{height:6px;background:rgba(255,255,255,0.1);border-radius:6px;flex:1;overflow:hidden}
+    .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--warm));}
+
+    /* small devices */
+    @media (max-width:720px){
+      header.hero{flex-direction:column-reverse;padding-bottom:40px}
+      .hero-right{width:100%}
+      .title{font-size:32px}
+      .wrap{padding:18px}
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none!important;transition:none!important}
+    }
+
+    /* accessibility helpers */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  </style>
+</head>
+<body>
+
+  <canvas id="spaceCanvas" aria-hidden="true"></canvas>
+
+  <main class="wrap" id="main">
+
+    <header class="hero" role="banner">
+      <div class="hero-left">
+        <h1 class="title" id="siteTitle" data-text="Cosmic Glitch — Broken Worlds">Cosmic Glitch — Broken Worlds</h1>
+        <p class="tagline">A vibrant, broken space for Hindi‑Urdu shayari and fragile English poems. Use settings to match your reading mood.</p>
+
+        <div class="cta-row">
+          <button class="btn" id="openLibrary">Open Library</button>
+          <button class="btn secondary" id="openCompose">Compose (local only)</button>
+          <button class="btn" id="playSound">Play with sound</button>
+        </div>
+
+        <div style="margin-top:14px;color:var(--muted);font-size:13px">Tip: Press <kbd>Space</kbd> to play/pause audio when reader is open.</div>
+      </div>
+
+      <aside class="hero-right">
+        <div class="hero-card" aria-hidden="true">
+          <div class="preview">
+            <div style="text-align:center;max-width:88%">
+              <div style="font-family:var(--serif);font-size:18px;margin-bottom:10px">Anthology Preview</div>
+              <div style="font-size:12px;color:var(--muted)">Sample cover, replace with your artwork.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center;justify-content:space-between">
+            <div style="font-size:13px;color:var(--muted)">Reading Mode: <strong id="currentMode">Focus</strong></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn" id="themeToggle">Theme</button>
+              <button class="btn" id="downloadBook">Print / PDF</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </header>
+
+    <section aria-labelledby="libraryHeading" style="margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <h2 id="libraryHeading" style="margin:0;font-family:var(--serif);font-size:20px">Poetry Library</h2>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="searchBox" placeholder="Search poems, lines or tags..." style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--paper)" />
+          <select id="filterTags" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--paper)">
+            <option value="">All tags</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid" id="poemGrid" aria-live="polite" style="margin-top:16px">
+        </div>
+    </section>
+
+    <div class="reader" id="reader" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="reader-inner" role="document">
+        <div class="controls">
+          <button class="btn" id="closeReader">Close</button>
+          <div class="player" style="flex:1">
+            <button class="btn" id="playPause">Play</button>
+            <div class="progress" aria-hidden="true"><i></i></div>
+            <div id="timeLabel" style="font-size:12px;color:var(--muted);min-width:70px;text-align:right">0:00</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="flex:1">
+            <h3 id="poemTitle" style="margin:0 0 6px;font-family:var(--serif)">Title</h3>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="poemMeta">tags • length</div>
+            <article class="poem-body" id="poemBody" tabindex="0">
+              </article>
+          </div>
+          <aside style="width:220px">
+            <div style="background:rgba(0,0,0,0.1);padding:12px;border-radius:10px">
+              <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Controls</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn" id="increaseFont">A+</button>
+                <button class="btn" id="decreaseFont">A-</button>
+                <button class="btn" id="toggleTheme">Sepia</button>
+                <button class="btn" id="exportPDF">Export PDF</button>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+            <div style="font-size:13px;color:var(--muted)">Share</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="copyLink">Copy link</button>
+              <a class="btn" id="mailtoLink" href="#">Email</a>
+            </div>
+
+          </aside>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="settings" role="region" aria-label="Reader settings">
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="reducedMotion"> Reduced motion</label>
+      <div style="height:8px"></div>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="autoplayPrefs"> Autoplay allowed</label>
+    </div>
+
+    <div id="compose" style="display:none;position:fixed;inset:0;background:rgba(6,6,6,0.7);align-items:center;justify-content:center;padding:18px;z-index:1200">
+      <div style="background:var(--bg);padding:18px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);width:min(800px,96%);max-height:86vh;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0">Compose (saved locally)</h3>
+          <div style="display:flex;gap:8px"><button class="btn" id="saveCompose">Save</button><button class="btn" id="closeCompose">Close</button></div>
+        </div>
+        <input id="composeTitle" placeholder="Title" style="width:100%;padding:10px;margin-bottom:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.08)" />
+        <textarea id="composeBody" placeholder="Write your poem here..." style="width:100%;min-height:240px;padding:12px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--paper)"></textarea>
+      </div>
+    </div>
+
+  </main>
+
+  <footer style="text-align:center;padding:28px 0;color:var(--muted);font-size:13px">Built as a starter scaffold. Replace audio / images in the assets/ folder. Preserve originals as requested.</footer>
+
+
+  <script>
+  (function(){
+    'use strict';
+
+    const POEMS = [
+      {
+        id: 'p1',
+        title: 'The Lonely Room',
+        tags: ['sad','hostel','library'],
+        lines: [
+          'The shortest night will come to stay,',
+          'with her beside me, shadows sway.',
+          'Whatever she carries, whatever she hides,',
+          'her silence still anchors the restless tides.'
+        ]
+      },
+      {
+        id: 'p2',
+        title: 'Ek Aakhri Khat',
+        tags: ['shayari','urdu','taarif'],
+        lines: [
+          'तुम्हारे नाम से जुड़ा हुआ मेरा हर एक वक़्त है,',
+          'किताबों के किनारों पर रखी एक पुरानी रूह की तरह।',
+          'कह नहीं पाता मगर हर पन्ना तुम्हारी खुशबू बताता है।'
+        ]
+      },
+      {
+        id: 'p3',
+        title: 'The Missed Call',
+        tags: ['sad','phone','memory'],
+        lines: [
+          'A missed call, an amber light —',
+          'the world folds into the margin of my pocket.',
+          'I replay the small silence like a hymn.'
+        ]
+      }
+    ];
+
+    const tracks = [
+      {id:'t1',title:'Lo‑Fi One',src:['assets/lofi1.mp3','assets/lofi1.ogg']},
+      {id:'t2',title:'Lo‑Fi Two',src:['assets/lofi2.mp3','assets/lofi2.ogg']}
+    ];
+
+    let sound = null;
+    let currentTrack = 0;
+    let isPlaying = false;
+
+    function initAudio(){
+      if(sound) return;
+      sound = new Howl({
+        src: tracks[currentTrack].src,
+        html5:true,
+        loop:true,
+        volume:0.45,
+        onplay: ()=>{
+          isPlaying = true;updatePlayerUI();
+          requestAnimationFrame(updateProgress);
+        },
+        onpause: ()=>{isPlaying=false;updatePlayerUI();},
+        onstop: ()=>{isPlaying=false;updatePlayerUI();}
+      });
+    }
+
+    const grid = document.getElementById('poemGrid');
+    const filterTags = document.getElementById('filterTags');
+    const searchBox = document.getElementById('searchBox');
+
+    function renderGrid(list){
+      grid.innerHTML = '';
+      list.forEach(p=>{
+        const el = document.createElement('article');
+        el.className='card';
+        el.tabIndex=0;
+        el.innerHTML = `
+          <h4>${escapeHtml(p.title)}</h4>
+          <p>${escapeHtml(p.lines.slice(0,1).join(' '))}</p>
+          <div class="tags">${p.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+        `;
+        el.addEventListener('click',()=>openReader(p));
+        el.addEventListener('keydown',e=>{ if(e.key==='Enter') openReader(p); });
+        grid.appendChild(el);
+      });
+    }
+
+    function populateTagFilter(){
+      const all = new Set();
+      POEMS.forEach(p=>p.tags.forEach(t=>all.add(t)));
+      filterTags.innerHTML = '<option value="">All tags</option>' + Array.from(all).map(t=>`<option value="${t}">${t}</option>`).join('');
+    }
+
+    const reader = document.getElementById('reader');
+    const poemTitle = document.getElementById('poemTitle');
+    const poemMeta = document.getElementById('poemMeta');
+    const poemBody = document.getElementById('poemBody');
+    const playPauseBtn = document.getElementById('playPause');
+    const playSoundBtn = document.getElementById('playSound');
+
+    function openReader(poem){
+      poemTitle.textContent = poem.title;
+      poemMeta.textContent = poem.tags.join(' • ') + ' • ' + poem.lines.length + ' lines';
+      poemBody.innerHTML = '';
+      poem.lines.forEach((ln,i)=>{
+        const span = document.createElement('span');
+        span.className='line';
+        span.dataset.index = i;
+        span.textContent = ln;
+        poemBody.appendChild(span);
+      });
+      reader.classList.add('open');
+      reader.setAttribute('aria-hidden','false');
+      setTimeout(()=>poemBody.focus(),200);
+      gsap.from('.reader-inner',{duration:0.6,y:20,opacity:0,ease:'power3.out'});
+      initAudio();
+      if(document.getElementById('autoplayPrefs').checked){
+        sound.play();
+      }
+    }
+
+    function closeReader(){
+      reader.classList.remove('open');
+      reader.setAttribute('aria-hidden','true');
+      if(sound && sound.playing()){ sound.pause(); }
+    }
+
+    document.getElementById('openLibrary').addEventListener('click',()=>{
+      document.getElementById('libraryHeading').scrollIntoView({behavior:'smooth'});
+    });
+    document.getElementById('closeReader').addEventListener('click',closeReader);
+    document.getElementById('closeCompose').addEventListener('click',()=>document.getElementById('compose').style.display='none');
+    document.getElementById('openCompose').addEventListener('click',()=>document.getElementById('compose').style.display='flex');
+    playSoundBtn.addEventListener('click',()=>{
+      initAudio();
+      if(sound.playing()) sound.pause(); else sound.play();
+    });
+    playPauseBtn.addEventListener('click',()=>{
+      if(!sound) initAudio();
+      if(sound.playing()) sound.pause(); else sound.play();
+    });
+
+    function updatePlayerUI(){
+      const isAudioPlaying = sound && sound.playing();
+      playPauseBtn.textContent = isAudioPlaying ? 'Pause' : 'Play';
+      playSoundBtn.textContent = isAudioPlaying ? 'Pause Sound' : 'Play with sound';
+    }
+
+    const progBar = document.querySelector('.progress > i');
+    const timeLabel = document.getElementById('timeLabel');
+    function updateProgress(){
+      if(!sound) return;
+      const pos = sound.seek() || 0;
+      const dur = sound.duration() || 1;
+      const pct = Math.min(100,Math.round((pos/dur)*100));
+      progBar.style.width = pct + '%';
+      timeLabel.textContent = formatTime(pos);
+      if(sound.playing()) requestAnimationFrame(updateProgress);
+    }
+
+    function formatTime(s){
+      s = Math.floor(s||0);
+      const m = Math.floor(s/60); const sec = s%60; return m+':'+(sec<10?'0':'' )+sec;
+    }
+
+    searchBox.addEventListener('input',()=>applyFilters());
+    filterTags.addEventListener('change',()=>applyFilters());
+
+    function applyFilters(){
+      const q = (searchBox.value||'').toLowerCase().trim();
+      const tag = filterTags.value;
+      const out = POEMS.filter(p=>{
+        if(tag && !p.tags.includes(tag)) return false;
+        if(!q) return true;
+        return p.title.toLowerCase().includes(q) || p.lines.join(' ').toLowerCase().includes(q) || p.tags.join(' ').toLowerCase().includes(q);
+      });
+      renderGrid(out);
+    }
+
+    function escapeHtml(str){
+      return (str+'').replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]});
+    }
+
+    document.getElementById('exportPDF').addEventListener('click',async()=>{
+      const title = poemTitle.textContent || 'poem';
+      const lines = Array.from(poemBody.querySelectorAll('.line')).map(n=>n.textContent);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({unit:'pt',format:'a4'});
+      const margin = 40; let y=60;
+      doc.setFont('Times', 'Roman');
+      doc.setFontSize(18);doc.text(title, margin, y); y+=26; doc.setFontSize(12);
+      lines.forEach(ln=>{
+        const split = doc.splitTextToSize(ln, 520);
+        doc.text(split, margin, y);
+        y += split.length*14;
+        if(y>750){doc.addPage();y=60}
+      });
+      doc.save(title.replace(/\s+/g,'_') + '.pdf');
+    });
+
+    document.getElementById('saveCompose').addEventListener('click',()=>{
+      const t = document.getElementById('composeTitle').value||'Untitled';
+      const b = document.getElementById('composeBody').value||'';
+      if(!b.trim()){alert('Write something to save locally.');return}
+      const draft = {id:'draft_'+Date.now(),title:t,lines:b.split('\n').filter(ln=>ln.trim()),tags:['draft']};
+      const drafts = JSON.parse(localStorage.getItem('poemDrafts')||'[]');
+      drafts.push(draft);localStorage.setItem('poemDrafts',JSON.stringify(drafts));
+      POEMS.push(draft);applyFilters();document.getElementById('compose').style.display='none';
+    });
+
+    document.getElementById('copyLink').addEventListener('click',()=>{
+      const t = poemTitle.textContent || 'poem';
+      const url = location.href.split('#')[0] + '#poem=' + encodeURIComponent(t);
+      navigator.clipboard.writeText(url).then(()=>alert('Link copied to clipboard'));
+    });
+
+    document.getElementById('mailtoLink').addEventListener('click',function(e){
+      e.preventDefault();
+      const subj = encodeURIComponent('A quiet poem');
+      const body = encodeURIComponent('I found this poem and wanted to share it with you.');
+      this.href = 'mailto:?subject='+subj+'&body='+body;
+      window.location = this.href;
+    });
+
+    let fontSize = 20;
+    document.getElementById('increaseFont').addEventListener('click',()=>{fontSize+=2;poemBody.style.fontSize=fontSize+'px'});
+    document.getElementById('decreaseFont').addEventListener('click',()=>{fontSize=Math.max(12,fontSize-2);poemBody.style.fontSize=fontSize+'px'});
+
+    document.getElementById('toggleTheme').addEventListener('click',()=>{
+      // This theme toggle is less relevant with the new design, but we'll keep the logic.
+      document.body.classList.toggle('sepia');
+    });
+    document.getElementById('themeToggle').addEventListener('click',()=>document.getElementById('toggleTheme').click());
+
+    function initAnimations(){
+      gsap.from('#siteTitle',{duration:0.9,y:10,opacity:0,delay:0.2,ease:'power3.out'});
+      gsap.from('.hero-card',{duration:1,y:10,opacity:0,delay:0.4,stagger:0.08});
+      document.addEventListener('mouseover',e=>{
+        const c = e.target.closest('.card');
+        if(c) gsap.to(c,{
+            scale:1.04,
+            rotation: (Math.random() - 0.5) * 5,
+            boxShadow:'0 0 35px var(--accent)',
+            duration:0.3
+        });
+      });
+      document.addEventListener('mouseout',e=>{
+        const c = e.target.closest('.card');
+        if(c) gsap.to(c,{
+            scale:1,
+            rotation: 0,
+            boxShadow:'0 0 15px rgba(255, 51, 204, 0.1)',
+            duration:0.3
+        });
+      });
+    }
+
+    document.addEventListener('keydown',e=>{
+      if(e.key === 'Escape') closeReader();
+      if(e.key === ' ' && reader.classList.contains('open')){ e.preventDefault(); if(sound && sound.playing()) sound.pause(); else if(sound) sound.play(); }
+    });
+
+    function loadDrafts(){
+      const drafts = JSON.parse(localStorage.getItem('poemDrafts')||'[]');
+      drafts.forEach(d=>{ if(!POEMS.some(p=>p.id===d.id)) POEMS.push(d) });
+    }
+
+    /**
+     * NEW: Planetary & Atmospheric Motion Canvas Animation
+     */
+    function animateSpaceCanvas() {
+        const canvas = document.getElementById('spaceCanvas');
+        if (!canvas || !canvas.getContext) return;
+
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [], orbs = [];
+        const numStars = 200;
+        const numOrbs = 5;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            stars = [];
+            orbs = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.5,
+                    alpha: Math.random()
+                });
+            }
+            const colors = ['#ff33cc', '#00e5ff', '#a9a9d4', '#f0f0ff'];
+            for (let i = 0; i < numOrbs; i++) {
+                orbs.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 80 + 20,
+                    color: colors[i % colors.length],
+                    vx: (Math.random() - 0.5) * 0.2,
+                    vy: (Math.random() - 0.5) * 0.2
+                });
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 26, 0.1)'; // Fading trail effect
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw stars
+            ctx.fillStyle = '#f0f0ff';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.alpha;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Draw and move orbs
+            orbs.forEach(orb => {
+                orb.x += orb.vx;
+                orb.y += orb.vy;
+                if (orb.x < 0 || orb.x > width) orb.vx *= -1;
+                if (orb.y < 0 || orb.y > height) orb.vy *= -1;
+
+                const gradient = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
+                gradient.addColorStop(0, orb.color + '33'); // semi-transparent center
+                gradient.addColorStop(1, orb.color + '00'); // fully transparent edge
+                
+                ctx.globalAlpha = 0.5;
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(orb.x, orb.y, orb.radius, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        draw();
+    }
+
+
+    function init(){
+      populateTagFilter();
+      loadDrafts();
+      renderGrid(POEMS);
+      initAnimations();
+      animateSpaceCanvas(); // Initialize the new background animation
+
+      const drafts = JSON.parse(localStorage.getItem('poemDrafts')||'[]');
+      if(drafts.length){
+        document.getElementById('composeTitle').value = drafts[drafts.length-1].title;
+        document.getElementById('composeBody').value = (drafts[drafts.length-1].lines||[]).join('\n');
+      }
+    }
+
+    window.__POEMS=POEMS;
+    document.addEventListener('DOMContentLoaded',init);
+
+  })();
+  </script>
+
+</body>
+</html>
